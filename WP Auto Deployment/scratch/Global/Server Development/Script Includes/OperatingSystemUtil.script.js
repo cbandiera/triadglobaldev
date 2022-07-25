@@ -248,7 +248,7 @@ OperatingSystemUtil.prototype = {
         grCompany.setLimit(1);
         grCompany.query();
         if (grCompany.next()) return grCompany;
-
+        gs.error('OperatingSystemUtil.getVendorCompany() - Vendor ' + name + ' not found in core_company table');
         return null;
     },
     /**SNDOC
@@ -754,15 +754,16 @@ OperatingSystemUtil.prototype = {
     @param {string} [edition] the edition of the operating system
     @return {GlideRecord} the record of operating system model
     */
-    getOperatingSystemModelInternal: function (type, major, minor, review, build, name, edition, vendorSysId) {
+    getOperatingSystemModelInternal: function (type, major, minor, review, build, name, edition, vendorSysId, codebase) {
         if (!type) throw new Error('Invalid null argument for the parameter type in the getOperatingSystemModelInternal operation in the class OperatingSystemUtil');
         grOSModel = new GlideRecord('u_cmdb_operating_system_product_model');
         grOSModel.setLimit(1);
-        grOSModel.addQuery('u_type', type);
+        grOSModel.addQuery('type', type);
         if (major) grOSModel.addQuery('major_version', major);
         if (minor) grOSModel.addQuery('minor_version', minor);
         if (review) grOSModel.addQuery('review_version', review);
         if (build) grOSModel.addQuery('build_version', build);
+        if (codebase) grOSModel.addQuery('short_description', codebase);
         if (name) grOSModel.addQuery('name', 'CONTAINS', name);
         if (edition) grOSModel.addQuery('edition', 'CONTAINS', edition);
         if (vendorSysId) grOSModel.addQuery('manufacturer', vendorSysId);
@@ -908,7 +909,7 @@ OperatingSystemUtil.prototype = {
     },
     /**SNDOC
     @name getOrCreateOperatingSystemModel
-	@description TBD
+	@description Used by the ETL to determine the Operating System
     @param {string} [name] - (mandatory) the name of the operating system
     @param {string} [version] - (mandatory) the version of the operating system
     @param {string} [type] - the type of the operating system (Mac, Windows, Linux, Unix, iOS, Androide, Generic)
@@ -933,11 +934,16 @@ OperatingSystemUtil.prototype = {
         return sysID + '';
     },
     /**SNDOC
-    @name decomposeVersion
+    @name composeVersion
 	@description TBD
     @param {string} [type] - (mandatory) the type of the operating system (Mac, Windows, Linux, Unix, iOS, Androide, Generic)
-    @param {string} [name] - (mandatory) the name of the operating system
-    @param {string} [version] - (mandatory) the version of the operating system
+    @param {string} [major] - major version number
+    @param {string} [minor] - minor version number
+    @param {string} [review] - review 
+    @param {string} [build] - build
+    @param {string} [lifecycleManagementPolicy] - Life Cycle
+    @param {string} [betaRC] - 
+    @param {string} [betaRCNumber] - 
     @return {object} Object with decomposed version in the field version, major, minor, review and build, betaRC, betaRCNumber
     */
     composeVersion: function (type, major, minor, review, build, lifecycleManagementPolicy, betaRC, betaRCNumber) {
@@ -1269,95 +1275,45 @@ OperatingSystemUtil.prototype = {
     @return {string} sys id of operating system model 
      */
     parseCrowdstrikeOS: function (platformID, osVersion, osBuild, productType) {
-        var queryParams = {};
-        var grOS;
-        if (platformID == 0) { // Windows
-            queryParams.type = this._osTypes.Windows;
-            queryParams.manufacturer = this.getVendorCompany(this._microsoftVendorName);
-            queryParams.name = osVersion;
-            queryParams.major_version = osVersion.split(' ')[2];
-            queryParams.minor_version = '0';
-            queryParams.build_version = osBuild;
-            return this.getOrCreateOSWithParams(queryParams);
-        }
-        if (platformID == 1) { // Mac
-            queryParams.type = this._osTypes.Mac;
-            queryParams.name = this._macOSDefaultName;
-            var rx = /([^(]*)\(([^)]*)\)/; // Big Sur (11.0)  / Monterrey(12)
-            var versionArr = rx.exec(osVersion);
-            queryParams.short_description = versionArr[1].trim();
-            var majMin = versionArr[2].split('.');
-            queryParams.major_version = majMin[0];
-            if (majMin.length > 1) {
-                queryParams.minor_version = majMin[1];
-            }
-            queryParams.build_version = osBuild.toString();
-            queryParams.manufacturer = this.getVendorCompany(this._appleVendorName);
-            grOS = this.getOrCreateOSWithParams(queryParams);
-            if (grOS.sys_created_on == grOS.sys_updated_on) {
-                grOS.version = versionArr[2] + ' (' + osBuild.toString() + ')';
-                if(majMin.length < 2) {
-                    grOS.minor_version = 0;
-                }
-                grOS.review_version = 0;
-                grOS.update();
-            }
-            return grOS;
-        }
-
+        var type, major, minor, review, build, name, edition, codebase;
+        var vendor;
         if (platformID == 3) { // Linux
-            var distro = ['Amazon', 'Debian', 'Oracle', 'Ubuntu'];
-            var distroName = ['Linux', 'Linux', 'Linux', 'Ubuntu'];
-            var distroManufacturer = [
-                this.getVendorCompany(this._amazonVendorName),
-                this.getVendorCompany(this._debianVendorName),
-                this.getVendorCompany(this._oracleVendorName),
-                this.getVendorCompany(this._canonicalVendorName)
-            ];
-
-            var versionStr = osVersion.split(' ');
-            var version = versionStr[versionStr.length - 1].split('.');
-            var distroIndex = distro.indexOf(versionStr[0]);
-            queryParams.type = 'Linux';
-            queryParams.name = distroName[distroIndex];
-            queryParams.manufacturer = distroManufacturer[distroIndex];
-            queryParams.major_version = version[0];
-            if (version.length > 1) {
-                queryParams.minor_version = version[1];
+            name = osVersion + ' ' + productType;
+            var decomposed = this.decomposeLinuxVersion(name, osVersion);
+            delete decomposed['review'];
+            delete decomposed['build'];
+            var grOS = this.getLinuxOperatingSystemModel(name, decomposed);
+            if (grOS) {
+                return grOS.sys_id;
             }
-            if (productType.toString() == 'Server') {
-                queryParams.edition = 'Server';
+            return null;
+        }
+        if (platformID == 0) { // Windows
+            type = this._osTypes.Windows;
+            vendor = this.getMicrosoftVendorCompany();
+            name = osVersion;
+            major = osVersion.split(' ')[2];
+            minor = '0';
+            build = osBuild.toString();
+        } else {
+            if (platformID == 1) { // Mac
+                type = this._osTypes.Mac;
+                vendor = this.getAppleVendorCompany();
+                name = this._macOSDefaultName;
+                var rx = /([^(]*)\(([^)]*)\)/; // Big Sur (11.0)  / Monterrey(12)
+                var versionArr = rx.exec(osVersion);
+                // codebase = versionArr[1].trim();
+                var majMin = versionArr[2].split('.');
+                major = majMin[0];
+                if (majMin.length > 1) {
+                    minor = majMin[1];
+                }
+                build = osBuild.toString();
             }
-            return this.getOrCreateOSWithParams(queryParams);
         }
-
-    },
-    /**SNDOC
-    @description query the operating system table according to the parameter object passed and create it if not found
-    @param {object} key: value pairs for querying the cmdb_operating_system_product_model table
-    @return {object} GlideRecord if found else null
-    */
-    getOrCreateOSWithParams: function (queryParams) {
-        var queryArray = [];
-        var grOS = new GlideRecord('u_cmdb_operating_system_product_model');
-        var grOSNew = new GlideRecord('u_cmdb_operating_system_product_model');
-        grOSNew.initialize();
-        for (var field in queryParams) {
-            var fieldValue = queryParams[field];
-            if (typeof (fieldValue) == 'object') {
-                fieldValue = fieldValue.sys_id;
-            }
-            queryArray.push(field + '=' + fieldValue.toString());
-            grOSNew[field] = fieldValue.toString();
-        }
-        grOS.addEncodedQuery(queryArray.join('^'));
-        grOS.query();
-        if (grOS.next()) {
-            return grOS;
-        }
-        gs.info("Couldn't find os with params: " + JSON.stringify(queryArray));
-        grOSNew.update();
-        return grOSNew;
+        if(vendor){
+        return this.getOperatingSystemModelInternal(type, major, minor, review, build, name, edition, vendor.sys_id, codebase);
+    }
     },
     /**SNDOC
     @name decomposeGenericVersion
@@ -1403,6 +1359,7 @@ OperatingSystemUtil.prototype = {
     type: 'OperatingSystemUtil',
     _runsOnParentField: 'Runs On',
     _runsOnChildField: 'Runs',
+    _runsOnRelationshipName: 'Runs On::Runs',
     _entitledToParentField: 'Entitled to',
     _entitledToChildField: 'Allowed for',
     _osTypes: {
