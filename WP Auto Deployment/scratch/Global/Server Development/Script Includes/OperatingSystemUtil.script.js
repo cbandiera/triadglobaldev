@@ -10,20 +10,13 @@ OperatingSystemUtil.prototype = {
     _entitledToParentField: 'Entitled to',
     _entitledToChildField: 'Allowed for',
 
-    /**SNDOC
-    @name initialize
-    */
-    osParser: null,
-    appleParser: null,
-    linuxParser: null,
-    windowsParser: null,
+    osParser: new OperatingSystemParser(),
+    appleParser: new OperatingSystemAppleParser(),
+    linuxParser: new OperatingSystemLinuxParser(),
+    windowsParser: new OperatingSystemWinParser(),
+    genericParser: new OperatingSystemGenericParser(),
+    osUtilInternal: new OperatingSystemInternal(),
 
-    initialize: function () {
-        this.osParser = new OperatingSystemParser();
-        this.appleParser = new OperatingSystemAppleParser();
-        this.linuxParser = new OperatingSystemLinuxParser();
-        this.windowsParser = new OperatingSystemWinParser();
-    },
     /**SNDOC
     @name getOrCreateOperatingSystemModel
 	@description Used by the ETL to determine the Operating System
@@ -65,8 +58,8 @@ OperatingSystemUtil.prototype = {
         if (platformID == 3) { // Linux
             name = osVersion + ' ' + productType;
             var decomposed = this.linuxParser.decomposeLinuxVersion(name, osVersion);
-            delete decomposed['review'];
-            delete decomposed['build'];
+            if(decomposed.review) delete decomposed['review'];
+            if(decomposed.build) delete decomposed['build'];
             var grOS = this.linuxParser.getLinuxOperatingSystemModel(name, decomposed);
             if (grOS) {
                 return grOS.sys_id;
@@ -83,11 +76,11 @@ OperatingSystemUtil.prototype = {
         } else {
             if (platformID == 1) { // Mac
                 type = this.appleParser.OsType_mac;
-                vendor = this.getAppleVendorCompany();
+                vendor = this.appleParser.getAppleVendorCompany();
                 name = this.appleParser._macOSDefaultName;
                 var rx = /([^(]*)\(([^)]*)\)/; // Big Sur (11.0)  / Monterrey(12)
                 var versionArr = rx.exec(osVersion);
-                // codebase = versionArr[1].trim();
+                codebase = versionArr[1].trim();
                 var majMin = versionArr[2].split('.');
                 major = majMin[0];
                 if (majMin.length > 1) {
@@ -97,7 +90,7 @@ OperatingSystemUtil.prototype = {
             }
         }
         if (vendor) {
-            return this.osUtilInternal.getOperatingSystemModelInternal(type, major, minor, review, build, name, edition, vendor.sys_id, codebase);
+            return this.osUtilInternal.getOperatingSystemModelInternal(type, major, minor, review, build, name, edition, vendor.sys_id.toString(), codebase);
         }
     },
     /**SNDOC
@@ -141,7 +134,7 @@ OperatingSystemUtil.prototype = {
     updateOperatingSystemModelVersion: function (grOperatingSystemModel) {
         if (!grOperatingSystemModel) throw new Error('Invalid null argument for the parameter grOperatingSystemModel in the updateOperatingSystemModelVersion operation in the class OperatingSystemUtil');
 
-        var version = this.composeVersion(
+        var version = this.osParser.composeVersion(
             grOperatingSystemModel.getValue('type'),
             grOperatingSystemModel.getValue('major_version'),
             grOperatingSystemModel.getValue('minor_version'),
@@ -164,7 +157,7 @@ OperatingSystemUtil.prototype = {
         var displayName = '';
         switch (grOperatingSystemModel.getValue('type')) {
             case this.windowsParser.OsType_windows:
-                displayName = this.composeWindowsDisplayNameInternal(
+                displayName = this.windowsParser.composeWindowsDisplayNameInternal(
                     grOperatingSystemModel.manufacturer.name.getValue(),
                     grOperatingSystemModel.getValue('name'),
                     grOperatingSystemModel.getValue('edition'),
@@ -176,7 +169,7 @@ OperatingSystemUtil.prototype = {
                 break;
 
             default:
-                displayName = this.composeGenericDisplayNameInternal(
+                displayName = this.genericParser.composeGenericDisplayName(
                     grOperatingSystemModel.manufacturer.name.getValue(),
                     grOperatingSystemModel.getValue('name'),
                     grOperatingSystemModel.getValue('edition'),

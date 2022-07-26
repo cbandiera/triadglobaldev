@@ -6,10 +6,8 @@ OperatingSystemAndroidParser.prototype = {
     OsType_android: 'Android',
     _googleVendorName: 'Google',
     _androidDefaultName: 'Android',
+    osUtilInternal: new OperatingSystemInternal(),
 
-    initialize: function () {
-        this.osUtilInternal = new OperatingSystemInternal();
-    },
     /**SNDOC
      @name getGoogleVendorCompany
      @description Gets the Google vendor company
@@ -59,14 +57,14 @@ OperatingSystemAndroidParser.prototype = {
             null);
     },
     /**SNDOC
-    @name composeAndroidVersionInternal
+    @name composeAndroidVersion
 	@description TBD
     @param {string} [major] - the version of the operating system
     @param {string} [minor] - the version of the operating system
     @param {string} [review] - the version of the operating system
     @return {string} Object with decomposed version in the field version, major, minor, review and build, betaRC, betaRCNumber
     */
-    composeAndroidVersionInternal: function (major, minor, review) {
+    composeAndroidVersion: function (major, minor, review) {
         if (!major) return '';
         return major + (minor && ((minor !== '0') || (review && (review !== '0'))) ? '.' + minor + (review && (review !== '0') ? '.' + review : '') : '');
     },
@@ -89,7 +87,7 @@ OperatingSystemAndroidParser.prototype = {
 
             return {
                 type: this.OsType_android,
-                version: this.composeAndroidVersionInternal(major, minor, review) || version,
+                version: this.composeAndroidVersion(major, minor, review) || version,
                 major: major,
                 minor: minor,
                 review: review

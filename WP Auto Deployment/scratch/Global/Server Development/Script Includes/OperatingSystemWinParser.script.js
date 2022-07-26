@@ -8,9 +8,8 @@ OperatingSystemWinParser.prototype = {
     _defaultWindowsServerEdition: 'Standard',
     _defaultWindowsDesktopEdition: 'Enterprise',
 
-    initialize: function () {
-        this.osUtilInternal = new OperatingSystemInternal();
-    },
+    osUtilInternal: new OperatingSystemInternal(),
+
     /**SNDOC
      @name getMicrosoftVendorCompany
      @description Gets the Microsoft vendor company
@@ -128,7 +127,7 @@ OperatingSystemWinParser.prototype = {
         if (!name) throw new Error('Invalid null argument for the parameter name in the decomposeWindowsServerVersion operation in the class OperatingSystemUtil');
         if (!version) throw new Error('Invalid null argument for the parameter version in the decomposeWindowsServerVersion operation in the class OperatingSystemUtil');
 
-        var objversion = this.decomposeMicrosoftVersionInternal(version);
+        var objversion = this.decomposeMicrosoftVersion(version);
         if (objversion) {
             objversion.type = this.OsType_windows;
             objversion.lifecycleManagementPolicy =
@@ -148,20 +147,20 @@ OperatingSystemWinParser.prototype = {
         if (!name) throw new Error('Invalid null argument for the parameter name in the decomposeWindowsDesktopVersion operation in the class OperatingSystemUtil');
         if (!version) throw new Error('Invalid null argument for the parameter version in the decomposeWindowsDesktopVersion operation in the class OperatingSystemUtil');
 
-        var objversion = this.decomposeMicrosoftVersionInternal(version);
+        var objversion = this.decomposeMicrosoftVersion(version);
         if (objversion) {
             objversion.type = this.OsType_windows;
         }
         return objversion;
     },
     /**SNDOC
-    @name decomposeMicrosoftVersionInternal
+    @name decomposeMicrosoftVersion
 	@description TBD
     @param {string} [version] - (mandatory) the version of the operating system
     @return {object} Object with decomposed version in the field version, major, minor, review and build, betaRC, betaRCNumber
     */
-    decomposeMicrosoftVersionInternal: function (version) {
-        if (!version) throw new Error('Invalid null argument for the parameter version in the decomposeMicrosoftVersionInternal operation in the class OperatingSystemUtil');
+    decomposeMicrosoftVersion: function (version) {
+        if (!version) throw new Error('Invalid null argument for the parameter version in the decomposeMicrosoftVersion operation in the class OperatingSystemUtil');
 
         var versionPattern = /(\d{1,2})(?:\.(\d{1,5})(?:\.(\d{1,5})(?:\.(\d{1,5}))?)?)?(?:\s*\(?(\d\w{1,8})\)?)?/;
         var match = versionPattern.exec(version);
@@ -173,7 +172,7 @@ OperatingSystemWinParser.prototype = {
 
 
         return {
-            version: this.composeMicrosoftVersionInternal(major, minor, build) || version,
+            version: this.composeMicrosoftVersion(major, minor, build) || version,
             major: major,
             minor: minor,
             build: build,
@@ -215,12 +214,12 @@ OperatingSystemWinParser.prototype = {
         }
     },
     /**SNDOC
-    @name composeMicrosoftVersionInternal
+    @name composeMicrosoftVersion
 	@description TBD
     @param {string} [version] - (mandatory) the version of the operating system
     @return {object} Object with decomposed version in the field version, major, minor, review and build, betaRC, betaRCNumber
     */
-    composeMicrosoftVersionInternal: function (major, minor, build) {
+    composeMicrosoftVersion: function (major, minor, build) {
         if (!major) return '';
         if (!minor) return '';
         if (!build) return '';

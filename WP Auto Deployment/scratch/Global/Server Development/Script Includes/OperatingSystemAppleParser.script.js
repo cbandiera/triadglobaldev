@@ -9,9 +9,8 @@ OperatingSystemAppleParser.prototype = {
     _macOSDefaultName: 'macOS',
     _iOSDefaultName: 'iOS',
 
-    initialize: function () {
-        this.osUtilInternal = new OperatingSystemInternal();
-    },
+    osUtilInternal: new OperatingSystemInternal(),
+
     /**SNDOC
     @name getAppleVendorCompany
 	@description Gets the Apple vendor company
@@ -60,7 +59,7 @@ OperatingSystemAppleParser.prototype = {
         if (!objVersion) throw new Error('Invalid null argument for the parameter objVersion in the createiOSOperatingSystemModel operation in the class OperatingSystemUtil');
         var grVendor = this.getAppleVendorCompany();
         var vendorSysId = grVendor ? grVendor.getUniqueValue() : null;
-        return this.createOperatingSystemModelInternal(
+        return this.osUtilInternal.createOperatingSystemModelInternal(
             this.OsType_ios,
             this._iOSDefaultName,
             objVersion.version,
@@ -83,7 +82,7 @@ OperatingSystemAppleParser.prototype = {
         if (!objVersion) throw new Error('Invalid null argument for the parameter objVersion in the createMacOperatingSystemModel operation in the class OperatingSystemUtil');
         var grVendor = this.getAppleVendorCompany();
         var vendorSysId = grVendor ? grVendor.getUniqueValue() : null;
-        return this.createOperatingSystemModelInternal(
+        return this.osUtilInternal.createOperatingSystemModelInternal(
             this.OsType_mac,
             this._macOSDefaultName,
             objVersion.version,
@@ -97,24 +96,24 @@ OperatingSystemAppleParser.prototype = {
             null);
     },
     /**SNDOC
-    @name composeAppleVersionInternal
+    @name composeAppleVersion
 	@description TBD
     @param {string} [version] - (mandatory) the version of the operating system
     @return {object} Object with decomposed version in the field version, major, minor, review and build, betaRC, betaRCNumber
     */
-    composeAppleVersionInternal: function (major, minor, review, build, betaRC, betaRCNumber) {
+    composeAppleVersion: function (major, minor, review, build, betaRC, betaRCNumber) {
         if (!major) return '';
         if (!minor) return '';
         return major + '.' + minor + (review !== '0' ? '.' + review : '') + (betaRC ? ' ' + betaRC + (betaRCNumber ? ' ' + betaRCNumber : '') : '') + (build ? ' (' + build + ')' : '');
     },
     /**SNDOC
-    @name decomposeAppleVersionInternal
+    @name decomposeAppleVersion
 	@description TBD
     @param {string} [version] - (mandatory) the version of the operating system
     @return {object} Object with decomposed version in the field version, major, minor, review and build, betaRC, betaRCNumber
     */
-    decomposeAppleVersionInternal: function (version) {
-        if (!version) throw new Error('Invalid null argument for the parameter version in the decomposeAppleVersionInternal operation in the class OperatingSystemUtil');
+    decomposeAppleVersion: function (version) {
+        if (!version) throw new Error('Invalid null argument for the parameter version in the decomposeAppleVersion operation in the class OperatingSystemUtil');
         var versionPattern = /(\d{1,5})(?:\.(\d{1,5})(?:\.(\d{1,5}))?)?(?:\s+(RC|Beta)(?:\s+(\d+))?)?(?:\s*\(?(\d\w{1,8})\)?)?(?:\s+(RC|Beta)(?:\s+(\d+))?)?/i;
         var match = versionPattern.exec(version);
         if (match) {
@@ -125,7 +124,7 @@ OperatingSystemAppleParser.prototype = {
             var betaRCNumber = match[5] || match[8] || '';
             var build = match[6] || '';
             return {
-                version: this.composeAppleVersionInternal(major, minor, review, build, betaRC, betaRCNumber) || version,
+                version: this.composeAppleVersion(major, minor, review, build, betaRC, betaRCNumber) || version,
                 major: major,
                 minor: minor,
                 review: review,
@@ -145,7 +144,7 @@ OperatingSystemAppleParser.prototype = {
     decomposeMacVersion: function (version) {
         if (!version) throw new Error('Invalid null argument for the parameter version in the decomposeMacVersion operation in the class OperatingSystemUtil');
 
-        var objVersion = this.decomposeAppleVersionInternal(version);
+        var objVersion = this.decomposeAppleVersion(version);
         if (objVersion) {
             objVersion.type = this.OsType_mac;
         }
@@ -160,7 +159,7 @@ OperatingSystemAppleParser.prototype = {
     decomposeIOSVersion: function (version) {
         if (!version) throw new Error('Invalid null argument for the parameter version in the decomposeIOSVersion operation in the class OperatingSystemUtil');
 
-        var objVersion = this.decomposeAppleVersionInternal(version);
+        var objVersion = this.decomposeAppleVersion(version);
         if (objVersion) {
             objVersion.type = this.OsType_ios;
         }

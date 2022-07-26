@@ -3,21 +3,13 @@
 var OperatingSystemParser = Class.create();
 OperatingSystemParser.prototype = {
 
-    linuxParser: null,
-    unixParser: null,
-    appleParser: null,
-    windowsParser: null,
-    androidParser: null,
-    genericParser: null,
+    linuxParser: new OperatingSystemLinuxParser(),
+    unixParser: new OperatingSystemUnixParser(),
+    appleParser: new OperatingSystemAppleParser(),
+    windowsParser: new OperatingSystemWinParser(),
+    androidParser: new OperatingSystemAndroidParser(),
+    genericParser: new OperatingSystemGenericParser(),
 
-    initialize: function () {
-        this.linuxParser = new OperatingSystemLinuxParser();
-        this.unixParser = new OperatingSystemUnixParser();
-        this.appleParser = new OperatingSystemAppleParser();
-        this.windowsParser = new OperatingSystemWinParser();
-        this.androidParser = new OperatingSystemAndroidParser();
-        this.genericParser = new OperatingSystemGenericParser();
-    },
     /**SNDOC
     @name cleanseOperatingSystemType
     @param {string} [name] - (mandatory) the name of the operating system
@@ -166,16 +158,16 @@ OperatingSystemParser.prototype = {
         switch (type) {                        
             case this.appleParser.OsType_mac:
             case this.appleParser.OsType_ios:
-                return this.appleParser.composeAppleVersionInternal(major, minor, review, build, betaRC, betaRCNumber);
+                return this.appleParser.composeAppleVersion(major, minor, review, build, betaRC, betaRCNumber);
             case this.windowsParser.OsType_windows:
-                return this.windowsParser.composeMicrosoftVersionInternal(major, minor, build);
+                return this.windowsParser.composeMicrosoftVersion(major, minor, build);
             case this.linuxParser.OsType_linux:
-                return this.linuxParser.composeLinuxVersionInternal(major, minor, review, build, lifecycleManagementPolicy);
+                return this.linuxParser.composeLinuxVersion(major, minor, review, build, lifecycleManagementPolicy);
             case this.androidParser.OsType_android:                        
-                return this.androidParser.composeAndroidVersionInternal(major, minor, review);
+                return this.androidParser.composeAndroidVersion(major, minor, review);
             case this.unixParser.OsType_unix:
             case this.genericParser.OsType_generic:
-                return this.genericParser.composeGenericVersionInternal(major, minor, review, build);
+                return this.genericParser.composeGenericVersion(major, minor, review, build);
             default:
                 return '';
         }

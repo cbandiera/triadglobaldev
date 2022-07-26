@@ -12,11 +12,9 @@ OperatingSystemUnixParser.prototype = {
     _hpuxDefaultName: 'HPUX',
     _solarisDefaultName: 'Solaris',
 
+    genericParser: new OperatingSystemGenericParser(),
     osUtilInternal: new OperatingSystemInternal(),
 
-    initialize: function () {
-        this.osUtilInternal = new OperatingSystemInternal();
-    },
     /**SNDOC
     @name extractUnixVendorName
 	@description Extracts the vendor name

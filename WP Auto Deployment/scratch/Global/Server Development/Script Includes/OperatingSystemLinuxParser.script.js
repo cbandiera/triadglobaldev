@@ -2,11 +2,21 @@ var OperatingSystemLinuxParser = Class.create();
 OperatingSystemLinuxParser.prototype = {
 
     OsType_linux: 'Linux',
+    _amazonVendorName: 'Amazon',
+    _canonicalVendorName: 'Canonical',
+    _debianVendorName: 'Debian',
+    _oracleVendorName: 'Oracle',
+    _redhatVendorName: 'RedHat',
+    _suseVendorName: 'SuSE',
+    _fedoraVendorName: 'Fedora',
+
+    UbuntuLinuxOSName: 'Ubuntu',
+
+    _linuxDefaultName: 'Linux',
+
+    osUtilInternal: new OperatingSystemInternal(),
+    genericParser: new OperatingSystemGenericParser(),
     
-    initialize: function () {
-        this.osParser = new OperatingSystemParser();
-        this.osUtilInternal = new OperatingSystemInternal();
-    },
     /**SNDOC
     @name extractLinuxVendorName
 	@description Extracts the vendor name
@@ -19,7 +29,8 @@ OperatingSystemLinuxParser.prototype = {
         var linuxVendorNamePattern = /(CANONICAL UBUNTU|CANONICAL|UBUNTU|ORACLE|AMAZON|CENTOS|REDHAT|SUSE|DEBIAN|FEDORA)/i;
         var matchVendor = linuxVendorNamePattern.exec(name);
         if (matchVendor) {
-            nameToSearch = this.osParser.toProperCase(matchVendor[0]);
+            var osParser = new OperatingSystemParser();
+            nameToSearch = osParser.toProperCase(matchVendor[0]);
             if (nameToSearch.includes(this._canonicalVendorName) || nameToSearch.includes(this.UbuntuLinuxOSName)) {
                 return this._canonicalVendorName;
             } else {
@@ -52,7 +63,8 @@ OperatingSystemLinuxParser.prototype = {
     @return {string} the linux edition
     */
     extractLinuxEditionName: function (name, vendorName) {
-        var server = this.osParser.isServerEdition(name);
+        var osParser = new OperatingSystemParser();
+        var server = osParser.isServerEdition(name);
         switch (vendorName) {
             case this._canonicalVendorName:
                 return server ? 'Server' : 'Desktop';
@@ -88,7 +100,7 @@ OperatingSystemLinuxParser.prototype = {
         return null;
     },
     /**SNDOC
-    @name composeLinuxVersionInternal
+    @name composeLinuxVersion
 	@description TBD
     @param {string} [major] - the major version of the Linux version
     @param {string} [minor] - the minor version of the Linux version
@@ -97,8 +109,8 @@ OperatingSystemLinuxParser.prototype = {
     @param {string} [lifecycleManagementPolicy] - he lifecycle management policy of the Linux version
     @return {string} the formated Linux version
     */
-    composeLinuxVersionInternal: function (major, minor, review, build, lifecycleManagementPolicy) {
-        return this.composeGenericVersionInternal(major, minor, review, build) + (lifecycleManagementPolicy ? ' ' + lifecycleManagementPolicy : '');
+    composeLinuxVersion: function (major, minor, review, build, lifecycleManagementPolicy) {
+        return this.genericParser.composeGenericVersion(major, minor, review, build) + (lifecycleManagementPolicy ? ' ' + lifecycleManagementPolicy : '');
     },
     /**SNDOC
     @name decomposeLinuxVersion
@@ -111,12 +123,14 @@ OperatingSystemLinuxParser.prototype = {
         if (!name) throw new Error('Invalid null argument for the parameter name in the decomposeLinuxVersion operation in the class OperatingSystemUtil');
         if (!version) throw new Error('Invalid null argument for the parameter version in the decomposeLinuxVersion operation in the class OperatingSystemUtil');
 
-        var objVersion = this.decomposeGenericVersion(version);
-        var lifecycleManagementPolicy = this.osParser.extractLifecycleManagementPolicy(name) ||
-            this.osParser.extractLifecycleManagementPolicy(version);
+        var genericParser = new OperatingSystemGenericParser();
+        var objVersion = genericParser.decomposeGenericVersion(version);
+        var osParser = new OperatingSystemParser();
+        var lifecycleManagementPolicy = osParser.extractLifecycleManagementPolicy(name) ||
+            osParser.extractLifecycleManagementPolicy(version);
         if (objVersion) {
             objVersion.type = this.OsType_linux;
-            objVersion.version = this.composeLinuxVersionInternal(objVersion.major, objVersion.minor, objVersion.review, objVersion.build, lifecycleManagementPolicy);
+            objVersion.version = this.composeLinuxVersion(objVersion.major, objVersion.minor, objVersion.review, objVersion.build, lifecycleManagementPolicy);
             objVersion.lifecycleManagementPolicy = lifecycleManagementPolicy;
 
         }
@@ -156,18 +170,6 @@ OperatingSystemLinuxParser.prototype = {
             objVersion.lifecycleManagementPolicy,
             null);
     },
-
-    _amazonVendorName: 'Amazon',
-    _canonicalVendorName: 'Canonical',
-    _debianVendorName: 'Debian',
-    _oracleVendorName: 'Oracle',
-    _redhatVendorName: 'RedHat',
-    _suseVendorName: 'SuSE',
-    _fedoraVendorName: 'Fedora',
-
-    UbuntuLinuxOSName: 'Ubuntu',
-
-    _linuxDefaultName: 'Linux',
 
     type: 'OperatingSystemLinuxParser',
 };

@@ -1,10 +1,9 @@
 var OperatingSystemGenericParser = Class.create();
 OperatingSystemGenericParser.prototype = {
     OsType_generic: 'Generic',
+    
+    osUtilInternal: new OperatingSystemInternal(),
 
-    initialize: function () {
-        this.osUtilInternal = new OperatingSystemInternal();
-    },
     /**SNDOC
     @name getGenericOperatingSystemModel
 	@description TBD
@@ -22,12 +21,12 @@ OperatingSystemGenericParser.prototype = {
         return null;
     },
     /**SNDOC
-    @name composeGenericVersionInternal
+    @name composeGenericVersion
 	@description TBD
     @param {string} [version] - (mandatory) the version of the operating system
     @return {object} Object with decomposed version in the field version, major, minor, review and build, betaRC, betaRCNumber
     */
-    composeGenericVersionInternal: function (major, minor, review, build) {
+    composeGenericVersion: function (major, minor, review, build) {
         if (!major) return '';
         return major + (minor ? '.' + minor + (review ? '.' + review + (build ? '.' + build : '') : '') : '');
     },
@@ -50,7 +49,7 @@ OperatingSystemGenericParser.prototype = {
 
             return {
                 type: this.OsType_generic,
-                version: this.composeGenericVersionInternal(major, minor, review, build),
+                version: this.composeGenericVersion(major, minor, review, build),
                 major: major,
                 minor: minor,
                 review: review,
@@ -61,14 +60,14 @@ OperatingSystemGenericParser.prototype = {
         }
     },
     /**SNDOC
-    @name composeGenericDisplayNameInternal
+    @name composeGenericDisplayName
 	@description TBD
     @param {string} [vendorName] the name of the operating system
     @param {string} [name] the name of the operating system
     @param {string} [version] the name of the operating system
     @return {string} the composed generic display name
     */
-    composeGenericDisplayNameInternal: function (vendorName, name, edition, version, lifecycleManagementPolicy) {
+    composeGenericDisplayName: function (vendorName, name, edition, version, lifecycleManagementPolicy) {
         var displayName = name;
 
         if (vendorName) {

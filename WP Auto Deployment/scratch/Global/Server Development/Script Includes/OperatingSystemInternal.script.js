@@ -2,7 +2,6 @@
 
 var OperatingSystemInternal = Class.create();
 OperatingSystemInternal.prototype = {
-    initialize: function () {},
     /**SNDOC
     @name getOperatingSystemModelInternal
 	@description Retriueve the operating system model from the database
@@ -66,7 +65,7 @@ OperatingSystemInternal.prototype = {
     @param {string} [name] the name of the vendor company
     @return {GlideRecord} the record of the vendor company
     */
-    getVendorCompanyInternal: function (name) {
+    getVendorCompany: function (name) {
         if (!name) throw new Error('Invalid null argument for the parameter name in the getVendorCompany operation in the class OperatingSystemUtil');
 
         var grCompany = new GlideRecord('core_company');
