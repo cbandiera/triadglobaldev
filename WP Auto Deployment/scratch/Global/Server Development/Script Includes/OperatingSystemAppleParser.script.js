@@ -1,5 +1,3 @@
-/* global SNC */
-
 var OperatingSystemAppleParser = Class.create();
 OperatingSystemAppleParser.prototype = {
 
