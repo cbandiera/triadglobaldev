@@ -44,6 +44,49 @@ OperatingSystemUtil.prototype = {
         return sysID + '';
     },
     /**SNDOC
+    @name parseIntuneOS
+    @description Get operating system parameter based on the intune payload
+    @param {string} [operatingsystem] - operating system name
+    @param {string} [osversion] - OS version
+    @return {string} sys id of operating system model 
+        */
+    parseIntuneOS: function (operatingsystem, osversion) {
+        var type, major, minor, review, build, name, edition, codebase;
+        var vendor;
+        type = this.osParser.cleanseOperatingSystemType(operatingsystem);
+        if (type == this.appleParser.OsType_mac) {
+            return;
+        } else {
+            if (type == this.appleParser.OsType_mac) {
+                return;
+            }
+        }
+    },
+    /**SNDOC
+    @name parseJamfOS
+    @description Get operating system parameter based on the jamf payload (jamf only has Mac machines)
+    @param {string} [os_name] - operating system name
+    @param {string} [os_version] - OS version
+    @param {string} [os_build] - OS build
+    @return {string} sys id of operating system model 
+        */
+    parseJamfOS: function (os_name, os_version, os_build) {
+        try {
+            var grOs = this.appleParser.getMacOperatingSystemModel({
+                build: os_build
+            });
+            if (!grOs) {
+                var objVersion = this.appleParser.decomposeAppleVersion(os_version);
+                objVersion.build = os_build;
+                grOs = this.appleParser.createMacOperatingSystemModel(objVersion);
+            }
+            return grOs.sys_id;
+        } catch (error) {
+            gs.error(error.message + ' ' + version + ' ' + build);
+        }
+        return null;
+    },
+    /**SNDOC
     @name paseCrowdstrikeOS
     @description Get operating system parameter from crowdstrike payload
     @param {integer} [platformID] - 0=Win 1=Mac 3=Linux
@@ -58,8 +101,8 @@ OperatingSystemUtil.prototype = {
         if (platformID == 3) { // Linux
             name = osVersion + ' ' + productType;
             var decomposed = this.linuxParser.decomposeLinuxVersion(name, osVersion);
-            if(decomposed.review) delete decomposed['review'];
-            if(decomposed.build) delete decomposed['build'];
+            if (decomposed.review) delete decomposed['review'];
+            if (decomposed.build) delete decomposed['build'];
             var grOS = this.linuxParser.getLinuxOperatingSystemModel(name, decomposed);
             if (grOS) {
                 return grOS.sys_id;

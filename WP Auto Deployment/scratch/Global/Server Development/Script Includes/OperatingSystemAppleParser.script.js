@@ -40,9 +40,10 @@ OperatingSystemAppleParser.prototype = {
         */
     getMacOperatingSystemModel: function (objVersion) {
         if (!objVersion) throw new Error('Invalid null argument for the parameter objVersion in the getMacOperatingSystemModel operation in the class OperatingSystemUtil');
-        if (!objVersion.major) throw new Error('Invalid null argument for the parameter objVersion.major in the getMacOperatingSystemModel operation in the class OperatingSystemUtil');
+        if (!(objVersion.major || objVersion.build)) throw new Error('Invalid null argument for the parameter objVersion.major in the getMacOperatingSystemModel operation in the class OperatingSystemUtil');
 
-        var grOSModel = this.osUtilInternal.getOperatingSystemModelInternal(this.OsType_mac, objVersion.major, objVersion.minor, objVersion.review, objVersion.build, null, null);
+        var grOSModel = this.osUtilInternal.getOperatingSystemModelInternal(
+            this.OsType_mac, this._macOSDefaultName ,objVersion.major, objVersion.minor, objVersion.review, objVersion.build, null, null);
         if (grOSModel) return grOSModel;
 
         return null;
@@ -78,6 +79,11 @@ OperatingSystemAppleParser.prototype = {
     */
     createMacOperatingSystemModel: function (objVersion) {
         if (!objVersion) throw new Error('Invalid null argument for the parameter objVersion in the createMacOperatingSystemModel operation in the class OperatingSystemUtil');
+        if (!objVersion.major) throw new Error('Invalid null argument for the parameter objVersion.major in the createMacOperatingSystemModel operation in the class OperatingSystemUtil');
+        var grOsModel = this.getMacOperatingSystemModel(objVersion);
+        if(grOsModel) {
+            return grOsModel;
+        }
         var grVendor = this.getAppleVendorCompany();
         var vendorSysId = grVendor ? grVendor.getUniqueValue() : null;
         return this.osUtilInternal.createOperatingSystemModelInternal(

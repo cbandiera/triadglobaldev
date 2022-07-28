@@ -1,3 +1,66 @@
+/*** Parse Jamf payload */
+var osUtil = new global.OperatingSystemUtil();
+var osNames = {};
+var log = [];
+function run() {
+    var gr = new GlideRecord('x_woph_wp_jamf_int_wp_jamf_data_source');
+    gr.addEncodedQuery('sys_import_set=20ea471b1b789d10cb52a64b234bcbf1');
+    gr.query();
+  	var output;
+    while (gr.next()) {
+      var name = '' + gr.u_os_name;
+      var version = '' + gr.u_os_version;
+      if( osNames[name] ) {
+        osNames[name]++;
+      } else {
+        osNames[name] = 1;
+      }
+      try {
+        if (name && version) {
+            output = osUtil.getOrCreateOperatingSystemModel(name, version);
+        }
+        //log.push(name + ' - ' + version + ' - ' + output);
+      } catch(err) {
+        gs.error( name + ' - ' + version + ' - ' + err );
+      }
+    }
+    return log;
+}
+run();
+osNames;
+
+/** parse Crowdstrike devices */
+var osUtil = new OperatingSystemUtil();
+var appleParser = new OperatingSystemAppleParser();
+var gr = new GlideRecord('u_crowdstrike_devices');
+gr.query();
+var log = [];
+while (gr.next() || false) { 
+    //gs.info(JSON.stringify([gr.u_platform_id.toString(), gr.u_os_version.toString(), gr.u_os_build.toString(), gr.u_product_type_desc.toString()]))
+    var platformID = gr.u_platform_id.toString();
+    var osVersion  = gr.u_os_version.toString();
+    var osBuild = gr.u_os_build.toString();
+    var productType = gr.u_product_type_desc.toString();
+  
+    var grOS = osUtil.parseCrowdstrikeOS(platformID, osVersion, osBuild, productType);
+		if( grOS ) {
+      continue
+      gs.info(JSON.stringify([
+      gr.u_platform_id.toString(),
+      gr.u_os_version.toString(),
+      gr.u_os_build.toString(),
+      gr.u_product_type_desc.toString(),
+      grOS.toString()
+  		]));
+    } else {
+			gs.info(JSON.stringify(
+  		[platformID, osVersion, osBuild, productType, '* Not Found *']))
+    }
+}
+
+
+
+
 var grOS = new GlideRecord('u_cmdb_operating_system_product_model');
 grOS.query();
 count = 0;
