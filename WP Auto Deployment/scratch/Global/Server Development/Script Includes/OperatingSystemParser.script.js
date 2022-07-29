@@ -83,7 +83,7 @@ OperatingSystemParser.prototype = {
     */
     getOperatingSystemModel: function (type, name, version) {
         if (!type) throw new Error('Invalid null argument for the parameter type in the getOperatingSystemModel operation in the class OperatingSystemParser');
-        if (!name) throw new Error('Invalid null argument for the parameter name in the getOperatingSystemModel operation in the class OperatingSystemParser');
+        // if (!name) throw new Error('Invalid null argument for the parameter name in the getOperatingSystemModel operation in the class OperatingSystemParser');
         if (!version) throw new Error('Invalid null argument for the parameter version in the getOperatingSystemModel operation in the class OperatingSystemParser');
 
         var objVersion = this.decomposeVersion(type, name, version);
@@ -118,9 +118,14 @@ OperatingSystemParser.prototype = {
     @return {GlideRecord} the record of the operating system
     */
     createOperatingSystemModel: function (type, name, version) {
-        if (!type) throw new Error('Invalid null argument for the parameter type in the createOperatingSystemModel operation in the class OperatingSystemUtil');
-        if (!name) throw new Error('Invalid null argument for the parameter name in the createOperatingSystemModel operation in the class OperatingSystemUtil');
-        if (!version) throw new Error('Invalid null argument for the parameter version in the createOperatingSystemModel operation in the class OperatingSystemUtil');
+        if (!type) throw new Error('Invalid null argument for the parameter type in the createOperatingSystemModel operation in the class OperatingSystemParser');
+        // if (!name) throw new Error('Invalid null argument for the parameter name in the createOperatingSystemModel operation in the class OperatingSystemParser');
+        if (!version) throw new Error('Invalid null argument for the parameter version in the createOperatingSystemModel operation in the class OperatingSystemParser');
+
+        var grOsModel = this.getOperatingSystemModel(type, name, version);
+        if( grOsModel ) {
+            return grOsModel;
+        }
 
         var objVersion = this.decomposeVersion(type, name, version);
         switch (type) {
@@ -154,7 +159,7 @@ OperatingSystemParser.prototype = {
     @return {object} Object with decomposed version in the field version, major, minor, review and build, betaRC, betaRCNumber
     */
     composeVersion: function (type, major, minor, review, build, lifecycleManagementPolicy, betaRC, betaRCNumber) {
-        if (!type) throw new Error('Invalid null argument for the parameter type in the composeVersion operation in the class OperatingSystemUtil');
+        if (!type) throw new Error('Invalid null argument for the parameter type in the composeVersion operation in the class OperatingSystemParser');
         switch (type) {                        
             case this.appleParser.OsType_mac:
             case this.appleParser.OsType_ios:
@@ -181,9 +186,9 @@ OperatingSystemParser.prototype = {
     @return {object} Object with decomposed version in the field version, major, minor, review and build, betaRC, betaRCNumber
     */
     decomposeVersion: function (type, name, version) {
-        if (!type) throw new Error('Invalid null argument for the parameter type in the decomposeVersion operation in the class OperatingSystemUtil');
-        if (!name) throw new Error('Invalid null argument for the parameter name in the decomposeVersion operation in the class OperatingSystemUtil');
-        if (!version) throw new Error('Invalid null argument for the parameter version in the decomposeVersion operation in the class OperatingSystemUtil');
+        if (!type) throw new Error('Invalid null argument for the parameter type in the decomposeVersion operation in the class OperatingSystemParser');
+        if (!version) throw new Error('Invalid null argument for the parameter version in the decomposeVersion operation in the class OperatingSystemParser');
+
         switch (type) {
             case this.appleParser.OsType_mac:
                 return this.appleParser.decomposeMacVersion(version);

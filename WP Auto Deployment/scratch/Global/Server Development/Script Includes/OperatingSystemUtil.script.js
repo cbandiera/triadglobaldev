@@ -55,7 +55,13 @@ OperatingSystemUtil.prototype = {
         var vendor;
         var type = this.osParser.cleanseOperatingSystemType(operatingsystem);
         var name = operatingsystem;
-        var objVersion = this.osParser.decomposeVersion(type, name, osversion);
+        var osModel;
+        if (type != this.windowsParser.OsType_windows) {
+            osModel = this.osParser.getOperatingSystemModel(type, name, osversion);
+        } else {
+            osModel = this.osParser.createOperatingSystemModel(type, name, osversion);
+        }
+        return osModel;
     },
     /**SNDOC
     @name parseJamfOS
@@ -77,7 +83,7 @@ OperatingSystemUtil.prototype = {
             }
             return grOs.sys_id;
         } catch (error) {
-            gs.error(error.message + ' ' + version + ' ' + build);
+            gs.error(error.message + ' ' + os_version + ' ' + os_build);
         }
         return null;
     },
