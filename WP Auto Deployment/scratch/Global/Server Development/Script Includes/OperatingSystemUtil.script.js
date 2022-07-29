@@ -51,16 +51,11 @@ OperatingSystemUtil.prototype = {
     @return {string} sys id of operating system model 
         */
     parseIntuneOS: function (operatingsystem, osversion) {
-        var type, major, minor, review, build, name, edition, codebase;
+        var major, minor, review, build, edition, codebase;
         var vendor;
-        type = this.osParser.cleanseOperatingSystemType(operatingsystem);
-        if (type == this.appleParser.OsType_mac) {
-            return;
-        } else {
-            if (type == this.appleParser.OsType_mac) {
-                return;
-            }
-        }
+        var type = this.osParser.cleanseOperatingSystemType(operatingsystem);
+        var name = operatingsystem;
+        var objVersion = this.osParser.decomposeVersion(type, name, osversion);
     },
     /**SNDOC
     @name parseJamfOS

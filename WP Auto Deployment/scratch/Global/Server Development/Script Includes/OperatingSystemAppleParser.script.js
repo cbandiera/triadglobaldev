@@ -43,7 +43,7 @@ OperatingSystemAppleParser.prototype = {
         if (!(objVersion.major || objVersion.build)) throw new Error('Invalid null argument for the parameter objVersion.major in the getMacOperatingSystemModel operation in the class OperatingSystemUtil');
 
         var grOSModel = this.osUtilInternal.getOperatingSystemModelInternal(
-            this.OsType_mac, this._macOSDefaultName ,objVersion.major, objVersion.minor, objVersion.review, objVersion.build, null, null);
+            this.OsType_mac ,objVersion.major, objVersion.minor, objVersion.review, objVersion.build, this._macOSDefaultName, objVersion.edition, null, null);
         if (grOSModel) return grOSModel;
 
         return null;
