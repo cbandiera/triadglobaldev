@@ -2,7 +2,7 @@ var OperatingSystemAppleParser = Class.create();
 OperatingSystemAppleParser.prototype = {
 
     OsType_ios: 'iOS',
-    OsType_mac: 'mac',
+    OsType_mac: 'macOS',
     _appleVendorName: 'Apple',
     _macOSDefaultName: 'macOS',
     _iOSDefaultName: 'iOS',
@@ -15,7 +15,8 @@ OperatingSystemAppleParser.prototype = {
     @return {GlideRecord} the record of the Apple vendor company
     */
     getAppleVendorCompany: function () {
-        return this.osUtilInternal.getVendorCompany(this._appleVendorName);
+        var vendor = this.osUtilInternal.getVendorCompany(this._appleVendorName);
+        
     },
     /**SNDOC
     @name getiOSOperatingSystemModel
@@ -78,8 +79,8 @@ OperatingSystemAppleParser.prototype = {
     @return {GlideRecord} the record of operating system model
     */
     createMacOperatingSystemModel: function (objVersion) {
-        if (!objVersion) throw new Error('Invalid null argument for the parameter objVersion in the createMacOperatingSystemModel operation in the class OperatingSystemUtil');
-        if (!objVersion.major) throw new Error('Invalid null argument for the parameter objVersion.major in the createMacOperatingSystemModel operation in the class OperatingSystemUtil');
+        if (!objVersion) throw new Error('Invalid null argument for the parameter objVersion in the createMacOperatingSystemModel operation in the class OperatingSystemParser');
+        if (!objVersion.major) throw new Error('Invalid null argument for the parameter objVersion.major in the createMacOperatingSystemModel operation in the class OperatingSystemParser');
         var grOsModel = this.getMacOperatingSystemModel(objVersion);
         if(grOsModel) {
             return grOsModel;

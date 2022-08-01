@@ -51,17 +51,22 @@ OperatingSystemUtil.prototype = {
     @return {string} sys id of operating system model 
         */
     parseIntuneOS: function (operatingsystem, osversion) {
-        var major, minor, review, build, edition, codebase;
-        var vendor;
         var type = this.osParser.cleanseOperatingSystemType(operatingsystem);
         var name = operatingsystem;
         var osModel;
         if (type != this.windowsParser.OsType_windows) {
-            osModel = this.osParser.getOperatingSystemModel(type, name, osversion);
+            try {
+                osModel = this.osParser.getOperatingSystemModel(type, name, osversion);
+            } catch(error) {
+                return null;
+            }
         } else {
             osModel = this.osParser.createOperatingSystemModel(type, name, osversion);
         }
-        return osModel;
+        if (osModel) {
+            return osModel.getUniqueValue();
+        }
+        return null;
     },
     /**SNDOC
     @name parseJamfOS

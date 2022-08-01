@@ -15,7 +15,7 @@ OperatingSystemInternal.prototype = {
     @return {GlideRecord} the record of operating system model
     */
     getOperatingSystemModelInternal: function (type, major, minor, review, build, name, edition, vendorSysId, codebase) {
-        if (!type) throw new Error('Invalid null argument for the parameter type in the getOperatingSystemModelInternal operation in the class OperatingSystemUtil');
+        if (!type) throw new Error('Invalid null argument for the parameter type in the getOperatingSystemModelInternal operation in the class OperatingSystemInternal');
         grOSModel = new GlideRecord('u_cmdb_operating_system_product_model');
         grOSModel.setLimit(1);
         grOSModel.addQuery('type', type);
@@ -37,10 +37,10 @@ OperatingSystemInternal.prototype = {
         }
     },
     createOperatingSystemModelInternal: function (type, name, version, major, minor, review, build, edition, vendorSysId, lifecycleManagementPolicy, versionAlias) {
-        if (!type) throw new Error('Invalid null argument for the parameter type in the createOperatingSystemModelInternal operation in the class OperatingSystemUtil');
-        if (!name) throw new Error('Invalid null argument for the parameter name in the createOperatingSystemModelInternal operation in the class OperatingSystemUtil');
-        if (!version) throw new Error('Invalid null argument for the parameter version in the createOperatingSystemModelInternal operation in the class OperatingSystemUtil');
-        if (!major) throw new Error('Invalid null argument for the parameter major in the createOperatingSystemModelInternal operation in the class OperatingSystemUtil');
+        if (!type) throw new Error('Invalid null argument for the parameter type in the createOperatingSystemModelInternal operation in the class OperatingSystemInternal');
+        if (!name) throw new Error('Invalid null argument for the parameter name in the createOperatingSystemModelInternal operation in the class OperatingSystemInternal');
+        if (!version) throw new Error('Invalid null argument for the parameter version in the createOperatingSystemModelInternal operation in the class OperatingSystemInternal');
+        if (!major) throw new Error('Invalid null argument for the parameter major in the createOperatingSystemModelInternal operation in the class OperatingSystemInternal');
 
         var grOSModel = new GlideRecord('u_cmdb_operating_system_product_model');
         grOSModel.initialize();
@@ -66,7 +66,7 @@ OperatingSystemInternal.prototype = {
     @return {GlideRecord} the record of the vendor company
     */
     getVendorCompany: function (name) {
-        if (!name) throw new Error('Invalid null argument for the parameter name in the getVendorCompany operation in the class OperatingSystemUtil');
+        if (!name) throw new Error('Invalid null argument for the parameter name in the getVendorCompany operation in the class OperatingSystemInternal');
 
         var grCompany = new GlideRecord('core_company');
         grCompany.addQuery('name', 'STARTSWITH', name);
@@ -83,7 +83,7 @@ OperatingSystemInternal.prototype = {
         grCompany.setLimit(1);
         grCompany.query();
         if (grCompany.next()) return grCompany;
-        gs.error('OperatingSystemUtil.getVendorCompany() - Vendor ' + name + ' not found in core_company table');
+        gs.error('OperatingSystemInternal.getVendorCompany() - Vendor ' + name + ' not found in core_company table');
         return null;
     },
     type: 'OperatingSystemInternal',
