@@ -57,7 +57,7 @@ OperatingSystemUtil.prototype = {
         if (type != this.windowsParser.OsType_windows) {
             try {
                 osModel = this.osParser.getOperatingSystemModel(type, name, osversion);
-            } catch(error) {
+            } catch (error) {
                 return null;
             }
         } else {
@@ -102,45 +102,36 @@ OperatingSystemUtil.prototype = {
     @return {string} sys id of operating system model 
      */
     parseCrowdstrikeOS: function (platformID, osVersion, osBuild, productType) {
-        var type, major, minor, review, build, name, edition, codebase;
-        var vendor;
+        var type, grOS;
         if (platformID == 3) { // Linux
-            name = osVersion + ' ' + productType;
+            var name = osVersion + ' ' + productType;
             var decomposed = this.linuxParser.decomposeLinuxVersion(name, osVersion);
             if (decomposed.review) delete decomposed['review'];
             if (decomposed.build) delete decomposed['build'];
-            var grOS = this.linuxParser.getLinuxOperatingSystemModel(name, decomposed);
-            if (grOS) {
-                return grOS.sys_id;
-            }
-            return null;
-        }
-        if (platformID == 0) { // Windows
-            type = this.windowsParser.OsType_windows;
-            vendor = this.windowsParser.getMicrosoftVendorCompany();
-            name = osVersion;
-            major = osVersion.split(' ')[2];
-            minor = '0';
-            build = osBuild.toString();
+            grOS = this.linuxParser.getLinuxOperatingSystemModel(name, decomposed);
         } else {
             if (platformID == 1) { // Mac
-                type = this.appleParser.OsType_mac;
-                vendor = this.appleParser.getAppleVendorCompany();
-                name = this.appleParser._macOSDefaultName;
-                var rx = /([^(]*)\(([^)]*)\)/; // Big Sur (11.0)  / Monterrey(12)
-                var versionArr = rx.exec(osVersion);
-                codebase = versionArr[1].trim();
-                var majMin = versionArr[2].split('.');
-                major = majMin[0];
-                if (majMin.length > 1) {
-                    minor = majMin[1];
+                try {
+                    grOS = this.appleParser.getMacOperatingSystemModel({
+                        build: osBuild
+                    });
+                    if (!grOS) {
+                        var objVersion = this.appleParser.decomposeAppleVersion(osVersion);
+                        objVersion.build = osBuild;
+                        grOS = this.appleParser.getMacOperatingSystemModel(objVersion);
+                    }
+                } catch (error) {
+                    gs.error(error.message + ' ' + osVersion + ' ' + osBuild);
                 }
-                build = osBuild.toString();
+            } else {
+                if (platformID == 0) { // Windows
+                    type = this.windowsParser.OsType_windows;
+                    grOS = this.osUtilInternal.getOperatingSystemModelInternal(type, null, null, null, osBuild);
+                }
             }
         }
-        if (vendor) {
-            return this.osUtilInternal.getOperatingSystemModelInternal(type, major, minor, review, build, name, edition, vendor.sys_id.toString(), codebase);
-        }
+        if (grOS) return grOS.getUniqueValue();
+        return null;
     },
     /**SNDOC
     @name createRunsOnRelationship
@@ -245,7 +236,11 @@ OperatingSystemUtil.prototype = {
             if (grOperatingSystemCI.install_date.nil()) {
                 grOperatingSystemCI.setValue('install_date', new GlideDateTime());
             }
-            grOperatingSystemCI.setValue('key', grOperatingSystemCI.u_cmdb_ci + '::' + grOperatingSystemCI.model_id.name.getValue() + '::' + grOperatingSystemCI.model_id.version.getValue() + '::1');
+            if (!grOperatingSystemCI.u_cmdb_ci.nil()) {
+                grOperatingSystemCI.setValue('key', grOperatingSystemCI.u_cmdb_ci.getValue() + '_:::_' + grOperatingSystemCI.model_id.name.getValue() + '_:::_' + grOperatingSystemCI.model_id.version.getValue() + '_:::_1');
+            } else {
+                grOperatingSystemCI.setValue('key', '');
+            }
         }
     },
     /**SNDOC
@@ -320,6 +315,92 @@ OperatingSystemUtil.prototype = {
         }
         return null;
     },
+    /**SNDOC
+    @name updateOperatingSystemEmptyKey
+	@description Update the empty key of operating system CIs
+    */
+    updateOperatingSystemEmptyKey: function () {
+        var grOperatingSystem = new GlideRecord('u_cmdb_ci_operating_system');
+        grOperatingSystem.addEncodedQuery('keyISEMPTY');
+        grOperatingSystem.query();
+        while (grOperatingSystem.next()) {
+            this.updateOperatingSystemCIbyModel(grOperatingSystem);
+            grOperatingSystem.update();
+        }
+    },
+    /**SNDOC
+    @name setComputerOperatingSystemFlags
+	@description Set the operating system flag for Linux, Windows and/or Mac
+    @param {string} [computerCISysId] - (mandatory) The computer CI sys_id
+    @param {string} [type] - (mandatory) The operating system type added to the computer
+    */
+    setComputerOperatingSystemFlags: function (computerCISysId, type) {
+        if (!computerCISysId) throw new Error('Invalid null argument for the parameter computerCISysId in the setComputerOperatingSystemFlags operation in the class OperatingSystemUtil');
+        if (!type) throw new Error('Invalid null argument for the parameter type in the setComputerOperatingSystemFlags operation in the class OperatingSystemUtil');
 
+        var grComputer = new GlideRecord('cmdb_ci_computer');
+        if (grComputer.get(computerCISysId)) {
+            if ((type == this.linuxParser.OsType_linux) && !grComputer.u_has_linux) {
+                grComputer.u_has_linux = true;
+                grComputer.update();
+                gs.info('Set Has Linux');
+            } else if ((type == this.windowsParser.OsType_windows) && !grComputer.u_has_windows) {
+                grComputer.u_has_windows = true;
+                grComputer.update();
+                gs.info('Set Has Windows');
+            } else if ((type == this.appleParser.OsType_mac) && !grComputer.u_has_mac) {
+                grComputer.u_has_mac = true;
+                grComputer.update();
+                gs.info('Set Has macOs');
+            }
+        }
+    },
+    /**SNDOC
+    @name checkAndUnsetComputerOperatingSystemFlags
+	@description Set the operating system flag for Linux, Windows and/or Mac
+    @param {string} [computerCISysId] - (mandatory) The computer CI sys_id
+    @param {string} [removedOperatingSystemSysId] - (mandatory) The operating system CI sys_id removed
+    @param {string} [type] - (mandatory) The operating system type removed from the computer
+    */
+    checkAndUnsetComputerOperatingSystemFlags: function (computerCISysId, removedOperatingSystemSysId, type) {
+        if (!computerCISysId) throw new Error('Invalid null argument for the parameter computerCISysId in the checkAndUnsetComputerOperatingSystemFlags operation in the class OperatingSystemUtil');
+        if (!removedOperatingSystemSysId) throw new Error('Invalid null argument for the parameter removedOperatingSystemSysId in the checkAndUnsetComputerOperatingSystemFlags operation in the class OperatingSystemUtil');
+        if (!type) throw new Error('Invalid null argument for the parameter type in the checkAndUnsetComputerOperatingSystemFlags operation in the class OperatingSystemUtil');
+
+        var grOS = new GlideRecord('u_cmdb_ci_operating_system');
+        grOS.addQuery('u_cmdb_ci', computerCISysId);
+        grOS.addQuery('sys_id', '!=', removedOperatingSystemSysId);
+        grOS.addQuery('model_id.type', type);
+        grOS.query();
+        if (!grOS.next()) {
+            var grComputer = new GlideRecord('cmdb_ci_computer');
+            if (grComputer.get(computerCISysId)) {
+                if ((type == this.linuxParser.OsType_linux) && grComputer.u_has_linux) {
+                    grComputer.u_has_linux = false;
+                    grComputer.update();
+                } else if ((type == this.windowsParser.OsType_windows) && grComputer.u_has_windows) {
+                    grComputer.u_has_windows = false;
+                    grComputer.update();
+                } else if ((type == this.appleParser.OsType_mac) && grComputer.u_has_mac) {
+                    grComputer.u_has_mac = false;
+                    grComputer.update();
+                }
+            }
+        }
+    },
+    /**SNDOC
+    @name checkAndSetFlagLastUpdatedOS
+	@description Set the operating system flag for Linux, Windows and/or Mac for all computers updated in the last 15 minutes
+    */
+    checkAndSetFlagLastUpdatedOS: function () {
+        var grOperatingSystem = new GlideRecord('u_cmdb_ci_operating_system');
+        grOperatingSystem.addEncodedQuery('sys_updated_onONLast 15 minutes@javascript:gs.beginningOfLast15Minutes()@javascript:gs.endOfLast15Minutes()');
+        grOperatingSystem.query();
+        while (grOperatingSystem.next()) {
+            var computerCISysId = grOperatingSystem.u_cmdb_ci.getValue();
+            var type = grOperatingSystem.model_id.type.getValue();
+            this.setComputerOperatingSystemFlags(computerCISysId, type);
+        }
+    },
     type: 'OperatingSystemUtil',
 };
