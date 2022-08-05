@@ -15,12 +15,11 @@ OperatingSystemAppleParser.prototype = {
     @return {GlideRecord} the record of the Apple vendor company
     */
     getAppleVendorCompany: function () {
-        var vendor = this.osUtilInternal.getVendorCompany(this._appleVendorName);
-        
+        return this.osUtilInternal.getVendorCompany(this._appleVendorName);
     },
     /**SNDOC
     @name getiOSOperatingSystemModel
-	@description TBD
+	@description Gets iOS model reference
     @param {object} [objVersion] - (mandatory) the object representing the decomposed version
     @return {GlideRecord} the record of operating system model
     */
@@ -35,7 +34,7 @@ OperatingSystemAppleParser.prototype = {
     },
     /**SNDOC
         @name getMacOperatingSystemModel
-    	@description TBD
+    	@description Gets macOS model reference
         @param {object} [objVersion] - (mandatory) the object representing the decomposed version
         @return {GlideRecord} the record of operating system model
         */
@@ -51,7 +50,7 @@ OperatingSystemAppleParser.prototype = {
     },
     /**SNDOC
     @name createiOSOperatingSystemModel
-	@description TBD
+	@description Creates iOS model reference
     @param {object} [objVersion] - (mandatory) the object representing the decomposed version
     @return {GlideRecord} the record of operating system model
     */
@@ -74,7 +73,7 @@ OperatingSystemAppleParser.prototype = {
     },
     /**SNDOC
     @name createMacOperatingSystemModel
-	@description TBD
+	@description Creates macOS model reference
     @param {object} [objVersion] - (mandatory) the object representing the decomposed version
     @return {GlideRecord} the record of operating system model
     */
@@ -102,8 +101,13 @@ OperatingSystemAppleParser.prototype = {
     },
     /**SNDOC
     @name composeAppleVersion
-	@description TBD
-    @param {string} [version] - (mandatory) the version of the operating system
+	@description Compose Apple version string
+    @param {string} [major] - the major version component of the operating system
+    @param {string} [minor] - the minor version component of the operating system
+    @param {string} [review] - the review component version of the operating system
+    @param {string} [build] - the build component version of the operating system
+    @param {string} [betaRC] - the beta or RC component version of the operating system
+    @param {string} [betaRCNumber] - the beta or RC number component version of the operating system
     @return {object} Object with decomposed version in the field version, major, minor, review and build, betaRC, betaRCNumber
     */
     composeAppleVersion: function (major, minor, review, build, betaRC, betaRCNumber) {
@@ -113,7 +117,7 @@ OperatingSystemAppleParser.prototype = {
     },
     /**SNDOC
     @name decomposeAppleVersion
-	@description TBD
+	@description Decompose Apple version elements from version string
     @param {string} [version] - (mandatory) the version of the operating system
     @return {object} Object with decomposed version in the field version, major, minor, review and build, betaRC, betaRCNumber
     */
@@ -142,7 +146,7 @@ OperatingSystemAppleParser.prototype = {
     },
     /**SNDOC
     @name decomposeMacVersion
-	@description TBD
+	@description Decompose Apple macOS version elements from version string
     @param {string} [version] - (mandatory) the version of the operating system
     @return {object} Object with decomposed version in the field version, major, minor, review and build, betaRC, betaRCNumber
     */
@@ -157,7 +161,7 @@ OperatingSystemAppleParser.prototype = {
     },
     /**SNDOC
     @name decomposeIOSVersion
-	@description TBD
+	@description Decompose Apple iOS version elements from version string
     @param {string} [version] - (mandatory) the version of the operating system
     @return {object} Object with decomposed version in the field version, major, minor, review and build, betaRC, betaRCNumber
     */
